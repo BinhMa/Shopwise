@@ -17,6 +17,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart, subtotal, isLoading, checkout } = useCart()
@@ -24,7 +25,7 @@ export default function CartPage() {
   const [isCheckingOut, setIsCheckingOut] = useState(false)
   const [isCheckoutComplete, setIsCheckoutComplete] = useState(false)
   const [showCheckoutDialog, setShowCheckoutDialog] = useState(false)
-  const [checkoutStep, setCheckoutStep] = useState<"shipping" | "payment" | "confirmation">("shipping")
+  const [checkoutStep, setCheckoutStep] = useState<"shipping" | "confirmation">("shipping")
   const [orderId, setOrderId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -37,14 +38,8 @@ export default function CartPage() {
     city: "",
     state: "",
     zipCode: "",
-    country: "United States",
-  })
-
-  const [paymentInfo, setPaymentInfo] = useState({
-    cardNumber: "",
-    cardName: "",
-    expiry: "",
-    cvv: "",
+    country: "Vietnam",
+    paymentMethod: "cod",
   })
 
   const handleShippingInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,9 +47,8 @@ export default function CartPage() {
     setShippingInfo((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handlePaymentInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setPaymentInfo((prev) => ({ ...prev, [name]: value }))
+  const handlePaymentMethodChange = (value: string) => {
+    setShippingInfo((prev) => ({ ...prev, paymentMethod: value }))
   }
 
   const handleCheckout = () => {
@@ -73,7 +67,7 @@ export default function CartPage() {
     setError(null)
   }
 
-  const handleShippingSubmit = (e: React.FormEvent) => {
+  const handleShippingSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     // Validate shipping info
     if (
@@ -85,23 +79,7 @@ export default function CartPage() {
     ) {
       toast({
         title: "Missing information",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setCheckoutStep("payment")
-  }
-
-  const handlePaymentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    // Validate payment info
-    if (!paymentInfo.cardNumber || !paymentInfo.cardName || !paymentInfo.expiry || !paymentInfo.cvv) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all payment details",
+        description: "Please fill in all required shipping information",
         variant: "destructive",
       })
       return
@@ -304,7 +282,6 @@ export default function CartPage() {
           <DialogHeader>
             <DialogTitle>
               {checkoutStep === "shipping" && "Shipping Information"}
-              {checkoutStep === "payment" && "Payment Information"}
               {checkoutStep === "confirmation" && "Order Confirmation"}
             </DialogTitle>
           </DialogHeader>
@@ -343,7 +320,7 @@ export default function CartPage() {
                   <Input id="city" name="city" value={shippingInfo.city} onChange={handleShippingInfoChange} required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="state">State *</Label>
+                  <Label htmlFor="state">State/Province *</Label>
                   <Input
                     id="state"
                     name="state"
@@ -355,7 +332,7 @@ export default function CartPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="zipCode">Zip Code *</Label>
+                  <Label htmlFor="zipCode">Zip/Postal Code *</Label>
                   <Input
                     id="zipCode"
                     name="zipCode"
@@ -375,68 +352,33 @@ export default function CartPage() {
                   />
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label>Payment Method *</Label>
+                <RadioGroup
+                  value={shippingInfo.paymentMethod}
+                  onValueChange={handlePaymentMethodChange}
+                  className="flex flex-col space-y-2 mt-2"
+                >
+                  <div className="flex items-center space-x-2 border p-3 rounded-md">
+                    <RadioGroupItem value="cod" id="cod" />
+                    <Label htmlFor="cod" className="flex-1 cursor-pointer">
+                      <div className="font-medium">Cash on Delivery (COD)</div>
+                      <div className="text-sm text-gray-500">Pay with cash when your order is delivered</div>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div className="mt-4 p-4 bg-gray-50 rounded-md">
+                <p className="text-sm text-gray-500">
+                  Your order will be processed and delivered within 3-5 business days.
+                </p>
+              </div>
+
               <DialogFooter className="mt-6">
                 <Button type="button" variant="outline" onClick={handleCloseCheckout}>
                   Cancel
-                </Button>
-                <Button type="submit">Continue to Payment</Button>
-              </DialogFooter>
-            </form>
-          )}
-
-          {checkoutStep === "payment" && (
-            <form onSubmit={handlePaymentSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="cardNumber">Card Number *</Label>
-                <Input
-                  id="cardNumber"
-                  name="cardNumber"
-                  value={paymentInfo.cardNumber}
-                  onChange={handlePaymentInfoChange}
-                  placeholder="1234 5678 9012 3456"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cardName">Name on Card *</Label>
-                <Input
-                  id="cardName"
-                  name="cardName"
-                  value={paymentInfo.cardName}
-                  onChange={handlePaymentInfoChange}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="expiry">Expiry Date *</Label>
-                  <Input
-                    id="expiry"
-                    name="expiry"
-                    value={paymentInfo.expiry}
-                    onChange={handlePaymentInfoChange}
-                    placeholder="MM/YY"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cvv">CVV *</Label>
-                  <Input
-                    id="cvv"
-                    name="cvv"
-                    value={paymentInfo.cvv}
-                    onChange={handlePaymentInfoChange}
-                    placeholder="123"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="mt-4 p-4 bg-gray-50 rounded-md">
-                <p className="text-sm text-gray-500">This is a demo checkout. No actual payment will be processed.</p>
-              </div>
-              <DialogFooter className="mt-6">
-                <Button type="button" variant="outline" onClick={() => setCheckoutStep("shipping")}>
-                  Back
                 </Button>
                 <Button type="submit" disabled={isCheckingOut}>
                   {isCheckingOut ? (
@@ -462,6 +404,7 @@ export default function CartPage() {
                 <div className="bg-gray-50 p-4 rounded-md w-full">
                   <p className="font-medium">Order ID: {orderId}</p>
                   <p className="text-sm text-gray-500">Please save this for your reference</p>
+                  <p className="text-sm text-gray-500 mt-2">Payment Method: Cash on Delivery (COD)</p>
                 </div>
               </div>
               <DialogFooter>

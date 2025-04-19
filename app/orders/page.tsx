@@ -9,11 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
 
 type OrderWithItems = {
   id: string
   user_id: string
   created_at: string
+  status?: string
+  payment_method?: string
   items: {
     id: string
     product: {
@@ -137,6 +140,12 @@ export default function OrdersPage() {
                 <div>
                   <CardTitle>Order #{order.id.slice(0, 8)}</CardTitle>
                   <p className="text-sm text-gray-500">Placed on {new Date(order.created_at).toLocaleDateString()}</p>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge variant={order.status === "completed" ? "default" : "outline"}>
+                    {order.status === "completed" ? "Completed" : "Processing"}
+                  </Badge>
+                  <span className="text-sm text-gray-500">Cash on Delivery (COD)</span>
                 </div>
               </div>
             </CardHeader>

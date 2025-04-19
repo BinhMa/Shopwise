@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase"
 
 export async function GET() {
   try {
-    // Kiểm tra kết nối
+
     const { data, error } = await supabase.from("products").select("count()", { count: "exact" })
 
     if (error) {
@@ -21,7 +21,7 @@ export async function GET() {
       )
     }
 
-    // Kiểm tra cấu trúc bảng
+
     const { data: tableInfo, error: tableError } = await supabase
       .from("products")
       .select("id, name, price, image_url, description, category")
